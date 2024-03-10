@@ -3,13 +3,14 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 R = 9
-r = 5
+r = 3
 rotations = 20 * np.pi
-precision = 100
-boundary = 100
+precision = 1000
+boundary = 20
 t = np.linspace(0, rotations, precision)
-t_lab = np.linspace(-1, 9, precision)
-
+t_lab = np.linspace(-2, -1, precision)
+point_x = []
+point_y = []
 choice = input("Wybierz co narysowac (c - cykloida, e - epicykloida, h - hipocykloida, z - zajeciowa): ")
 
 if choice == "c":
@@ -26,14 +27,17 @@ elif choice == "h":
     # hipocykloida
     cycl_x = (R - r) * np.cos(t) + r * np.cos(((R - r) / r) * t)
     cycl_y = (R - r) * np.sin(t) - r * np.sin(((R - r) / r) * t)
-    stableX = R * np.cos(t)
-    stableY = R * np.sin(t)
+    stable_x = R * np.cos(t)
+    stable_y = R * np.sin(t)
 elif choice == "z":
     # zajeciowa
+    r = 0.1
+    boundary = 4
     poly_x = t_lab
-    poly_y = (11 * t_lab + 12 * t_lab ** 2 + 5 * t_lab ** 3) / (7 + 4 * t_lab)
-    cycl_x = poly_x + (r * (r - np.sin(t_lab))) - 8
-    cycl_y = poly_y + (r * (1 - np.cos(t_lab)))
+    x = t_lab
+    poly_y = (14 * x * np.exp(-8 * x)) / (1e6 * (4 * x + 13 * np.exp(x)))
+    cycl_x = poly_x + r * (t_lab - np.sin(t_lab)) - r
+    cycl_y = poly_y + (r * (1 - np.cos(t_lab))) - r
 
 fig, ax = plt.subplots()
 cycl, = ax.plot([], [], lw=1)
@@ -91,8 +95,7 @@ def animate_cycloid(i):
 
 
 def animate_lab(i):
-    cycl.set_data(cycl_x[:i], cycl_y[:i])
-    angle = i * (rotations / precision)
+    angle = i/(2*np.pi)
 
     center_x = poly_x[i] - r
     center_y = poly_y[i]
@@ -100,6 +103,9 @@ def animate_lab(i):
     moving_x = center_x + r * np.cos(t)
     moving_y = center_y + r * np.sin(t)
     moving.set_data(moving_x, moving_y)
+    point_x.append(center_x + r * np.cos(angle))
+    point_y.append(center_y + r * np.sin(angle))
+    cycl.set_data(point_x[:i], point_y[:i])
     return cycl, moving
 
 
@@ -112,9 +118,13 @@ elif choice == "h":
 elif choice == "z":
     ani = animation.FuncAnimation(fig, animate_lab, init_func=init, frames=len(t), interval=20, blit=True)
 
+
 plt.xlim(-boundary, boundary)
-plt.ylim(-boundary, boundary)
+if choice == "z":
+    plt.ylim(-10, 40)
+else:
+    plt.ylim(-boundary, boundary)
+    plt.axis('equal')
 plt.grid()
-plt.axis('equal')
 
 plt.show()
